@@ -2,11 +2,13 @@ import re
 import matplotlib.pyplot as plt
 import json
 import pandas as pd
+import torch
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from datasets import load_dataset
 from transformers import AutoTokenizer
+from torch.distributions import Categorical
 
 class BencmarkDataset(ABC):
     def __init__(self, 
@@ -94,6 +96,51 @@ class GSMDataset(BencmarkDataset):
     def craft_prompt(self, example: str) -> str:
         return example
         
+
+@torch.no_grad()
+def generate(model, tokenizer, input_ids: torch.Tensor, max_new_tokens: int, temperature: float = 1.0) -> torch.Tensor:
+    log_zero = -1e4
+
+    # Initialize generated tokens with the input prompt
+    generated_ids = input_ids
+    finished_sequences = torch.zeros(input_ids.shape[0], dtype=torch.bool, device=model.device)
+    log_probs = []
+
+    # Iteratively generate tokens using greedy decoding
+    for token_idx in range(max_new_tokens):
+        # Filter out finished sequences
+        active_indices = torch.nonzero(~finished_sequences).squeeze(-1)
+        if len(active_indices) == 0:
+            break
+
+        # Get model outputs for active sequences
+        active_input_ids = generated_ids[active_indices]
+        outputs = model(input_ids=active_input_ids)
+        logits = outputs.logits
+
+        # Get the last token logits and apply argmax to select the next token
+        next_token_logits = logits[:, -1, :] / temperature
+        next_token_log_probs = torch.nn.functional.log_softmax(next_token_logits, dim=-1)
+        next_token_id = Categorical(logits=next_token_log_probs).sample()
+        # next_token_log_prob, next_token_id = next_token_log_probs.max(dim=-1)
+
+        # Save log next-token distribution for each sequence in batch; inactivate sequences produce <pad> token with probability 1
+        curr_log_probs = torch.full((input_ids.shape[0], len(tokenizer)), log_zero, dtype=next_token_log_probs.dtype, device=model.device)
+        curr_log_probs[:, tokenizer.pad_token_id] = 0.0
+        curr_log_probs[active_indices] = next_token_log_probs
+        log_probs.append(curr_log_probs)
+
+        # Update finished sequences and add padding if necessary
+        finished_sequences[active_indices] |= (next_token_id == tokenizer.eos_token_id)
+
+        # Create a tensor for the next tokens to append to all sequences
+        new_tokens = torch.full((generated_ids.shape[0], 1), tokenizer.pad_token_id, dtype=torch.long, device=model.device)
+        new_tokens[active_indices] = next_token_id.unsqueeze(-1)
+
+        # Append the next token to the generated sequence
+        generated_ids = torch.cat([generated_ids, new_tokens], dim=-1)
+
+    return generated_ids, log_probs
 
 def update_vllm_config(vllm_config_path: str, vllm_log_file_path: str) -> dict:
     vllm_cfg_dict = {
@@ -228,7 +275,7 @@ def parse_metrics(log_file_path) -> pd.DataFrame:
     
     return metrics
 
-def plot_figure(x, y1, y2, xlabel, ylabel, title, label1, label2):
+def plot_figure(x, y1, y2, xlabel, ylabel, title, label1, label2, save_folder=None):
     plt.figure(figsize=(10, 6))
     plt.plot(x, y1, marker='o', linestyle='-', color='blue', label=label1)
     plt.plot(x, y2, marker='o', linestyle='-', color='red', label=label2)
@@ -237,9 +284,12 @@ def plot_figure(x, y1, y2, xlabel, ylabel, title, label1, label2):
     plt.ylabel(ylabel, fontsize=16)
     plt.grid(True)
     plt.legend(title="Task", fontsize=14, title_fontsize=16)
-    plt.show()
+    if save_folder:
+        plt.savefig(f"{save_folder}/{title}.png")
+    else:
+        plt.show()
     
-def plot_bar_chart(x, y1, y2, xlabel, ylabel, title, label1, label2):
+def plot_bar_chart(x, y1, y2, xlabel, ylabel, title, label1, label2, save_folder=None):
     fig, ax = plt.subplots()
     bar_width = 0.35
     rects1 = ax.bar(x - bar_width/2, y1, bar_width, label=label1, color='blue')
@@ -250,13 +300,17 @@ def plot_bar_chart(x, y1, y2, xlabel, ylabel, title, label1, label2):
     ax.set_xticks(x)
     ax.set_xticklabels(x)
     ax.legend(title="Task", fontsize=14, title_fontsize=16)
-    plt.show()
+    if save_folder:
+        plt.savefig(f"{save_folder}/{title}.png")
+    else:
+        plt.show()
     
 def plot_metrics(
     metrics_control: pd.DataFrame, 
     metrics_experiment: pd.DataFrame, 
     control_label: str, 
-    experiment_label: str
+    experiment_label: str,
+    save_folder: Optional[str] = None
 ):
     """
     Plots the Draft acceptance rate, System efficiency, Average Time per Proposal Token, Scoring Time,
@@ -277,7 +331,8 @@ def plot_metrics(
         'Draft Acceptance Rate', 
         'Draft Acceptance Rate vs Number of Speculative Tokens', 
         control_label, 
-        experiment_label
+        experiment_label,
+        save_folder
     )
 
     # Plot System Efficiency
@@ -289,7 +344,8 @@ def plot_metrics(
         'System Efficiency', 
         'System Efficiency vs Number of Speculative Tokens', 
         control_label, 
-        experiment_label
+        experiment_label,
+        save_folder
     )
 
     # Plot Average Time per Proposal Token
@@ -301,7 +357,8 @@ def plot_metrics(
         'Average Time per Proposal Token (ms)', 
         'Average Time per Proposal Token vs Number of Speculative Tokens', 
         control_label, 
-        experiment_label
+        experiment_label,
+        save_folder
     )
     
     # Plot Scoring Time
@@ -313,7 +370,8 @@ def plot_metrics(
         'Scoring Time (ms)', 
         'Scoring Time vs Number of Speculative Tokens', 
         control_label, 
-        experiment_label
+        experiment_label,
+        save_folder
     )
     
     # Plot Verification Time
@@ -325,7 +383,8 @@ def plot_metrics(
         'Verification Time (ms)', 
         'Verification Time vs Number of Speculative Tokens', 
         control_label, 
-        experiment_label
+        experiment_label,
+        save_folder
     )
     
     # Plot Runtime vs Number of Speculative Tokens
@@ -337,7 +396,8 @@ def plot_metrics(
         'Runtime (s)',
         'Runtime vs Number of Speculative Tokens',
         control_label,
-        experiment_label
+        experiment_label,
+        save_folder
     )
 
 def print_cpu_gpu_times(trace_file_path: str):

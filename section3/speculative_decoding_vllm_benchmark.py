@@ -58,7 +58,7 @@ def run_benchmark(easy_mode:bool, args, conn) -> pd.DataFrame:
         "speculative_model": args.helper_model_name,
         "use_v2_block_manager": True,
         "trust_remote_code": True,
-        "gpu_memory_utilization": 0.8,
+        "gpu_memory_utilization": 0.9,
         "dtype": torch.bfloat16
     }
     
@@ -110,26 +110,31 @@ def main():
     parser.add_argument("--temperature", type=float, default=1.0)
     args = parser.parse_args()
     
+    save_folder = "./vllm_benchmark"
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+
     parent_conn, child_conn = mp.Pipe()
     easy_process = mp.Process(target=run_benchmark, args=(True, args, child_conn))
     easy_process.start()
     easy_process.join()
     easy_metrics = parent_conn.recv()
-    easy_metrics.to_csv(f"easy_metrics_{args.dataset}.csv")
-    
+    easy_metrics.to_csv(f"{save_folder}/easy_metrics_{args.dataset}.csv")
     
     parent_conn, child_conn = mp.Pipe()
     hard_process = mp.Process(target=run_benchmark, args=(False, args, child_conn))
     hard_process.start()
     hard_process.join()
     hard_metrics = parent_conn.recv()
-    hard_metrics.to_csv(f"hard_metrics_{args.dataset}.csv")
+    hard_metrics.to_csv(f"{save_folder}/hard_metrics_{args.dataset}.csv")
+    
     
     plot_metrics(
         metrics_control=easy_metrics, 
         metrics_experiment=hard_metrics, 
         control_label=f"{args.dataset} - easy",
-        experiment_label=f"{args.dataset} - hard"
+        experiment_label=f"{args.dataset} - hard",
+        save_folder=save_folder
     )
     
 if __name__ == "__main__":
