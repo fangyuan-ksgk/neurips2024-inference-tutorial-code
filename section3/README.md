@@ -19,30 +19,27 @@ Using `speculative_decoding_vllm_benchmark.py`, we capture vLLM Speculative Deco
 Example command line:
 ```bash
 python speculative_decoding_vllm_benchmark.py
-    --target_model_name meta-llama/Meta-Llama-3-8B-Instruct
-    --helper_model_name ibm-fms/llama3-8b-accelerator 
+    --target_model_name meta-llama/Meta-Llama-3.1-70B-Instruct
+    --helper_model_name meta-llama/Meta-Llama-3.2-1B-Instruct
     --instruct_mode 
     --dataset gsm 
-    --num_samples 30 
+    --num_samples 512
     --seed 42 
-    --max_new_tokens 100 
-    --max_speculation_size 4
+    --max_new_tokens 512
+    --max_speculation_size 20
     --num_proc 6 
     --temperature 1.0
 ```
 
 
 ### Benchmark Results
-Here are some example results we get from running the benchmark on an A100 80GB GPU:
+Here are some example results we get from running the benchmark on an H100 80GB GPU. Note that the right column represents the "misaligned" case when draft/helper model coupled with the instruct model. In this case the acceptance rates are substantially lower.
 
-![Acceptance Rate](./vllm_benchmark/Draft_Acceptance_Rate.png)
-
-![Efficiency](./vllm_benchmark/System_Efficiency.png)
-
-![Time Per Proposal](./vllm_benchmark/Time_Per_Proposal.png)
-
-![Scoring Time](./vllm_benchmark/Scoring_Time.png)
-
-![Verification Time](./vllm_benchmark/Verification_Time.png)
-
-![Average Latency](./vllm_benchmark/Avg_Latency.png)
+| Llama 3.1 70B Instruct <> Llama 3.2 1B Instruct |  Llama 3.1 70B Instruct <> Llama 3.2 1B |
+| - | - |
+| ![Acceptance Rate](<vllm_benchmark_h100/Draft Acceptance Rate vs Number of Speculative Tokens.png>) | ![Acceptance Rate](<vllm_benchmark_h100_wbase/Draft Acceptance Rate vs Number of Speculative Tokens.png>) |
+| ![Efficiency](<vllm_benchmark_h100/System Efficiency vs Number of Speculative Tokens.png>) | ![Efficiency](<vllm_benchmark_h100_wbase/System Efficiency vs Number of Speculative Tokens.png>) |
+| ![Time Per Proposal](<vllm_benchmark_h100/Average Time per Proposal Token vs Number of Speculative Tokens.png>) | ![Time Per Proposal](<vllm_benchmark_h100_wbase/Average Time per Proposal Token vs Number of Speculative Tokens.png>) |
+| ![Scoring Time](<vllm_benchmark_h100/Scoring Time vs Number of Speculative Tokens.png>) | ![Scoring Time](<vllm_benchmark_h100_wbase/Scoring Time vs Number of Speculative Tokens.png>) |
+| ![Verification Time](<vllm_benchmark_h100/Verification Time vs Number of Speculative Tokens.png>) | ![Verification Time](<vllm_benchmark_h100_wbase/Verification Time vs Number of Speculative Tokens.png>) |
+| ![Average Latency](<vllm_benchmark_h100/Runtime vs Number of Speculative Tokens.png>) | ![Average Latency](<vllm_benchmark_h100_wbase/Runtime vs Number of Speculative Tokens.png>) |

@@ -10,7 +10,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 from torch.distributions import Categorical
 
-class BencmarkDataset(ABC):
+class BenchmarkDataset(ABC):
     def __init__(self, 
                  dataset: str, 
                  num_samples: int = 50, 
@@ -50,10 +50,11 @@ class BencmarkDataset(ABC):
     
     @abstractmethod
     def craft_prompt(self, example: str) -> str:
+        # few shot eval can be implemented here
         raise NotImplementedError
             
             
-class FlroesDataset(BencmarkDataset):
+class FloresDataset(BenchmarkDataset):
     def __init__(self, 
                  dataset: str, 
                  num_samples: int = 50, 
@@ -73,15 +74,15 @@ class FlroesDataset(BencmarkDataset):
     def craft_prompt(self, example: str) -> str:
         return f"Translate the following sentence to {self.target_language}:\n{example}"
     
-class GSMDataset(BencmarkDataset):
+class GSMDataset(BenchmarkDataset):
     def __init__(self,
                  dataset: str, 
                  num_samples: int = 50, 
                  seed: int = 42, 
                  easy_mode: bool = True,  
                  num_proc: int = 8) -> None:
-        self.filter_condition = (lambda x: len(x['answer']) <= 100) if easy_mode \
-                                else (lambda x: len(x['answer']) > 400)
+        self.filter_condition = (lambda x: x['answer'].count("<<") <= 3) if easy_mode \
+                                else (lambda x: x['answer'].count("<<") > 3)
         super().__init__(dataset, num_samples, seed, easy_mode, num_proc)
         self.system_prompt = 'You are a math assistant. The user will ask you math questions and you will solve them.'
         
