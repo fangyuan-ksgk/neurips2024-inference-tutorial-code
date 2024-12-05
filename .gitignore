@@ -1,4 +1,8 @@
+# Model checkpoints
+*.gguf
 *.ckpt
+
+# Large files
 data
 generated/
 
@@ -114,3 +118,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# ctags
+tags
+
