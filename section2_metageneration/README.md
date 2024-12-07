@@ -17,12 +17,12 @@ export VERUS_PATH=/my/path/to/target-verus/release/verus
 
 ### Setup (LLM)
 
-By default, the notebook requires an Open AI API key. After obtaining a key, set the `OPENAI_API_KEY` environment variable is set to the key:
+By default, the notebook requires an Open AI API key. After obtaining a key, set the `OPENAI_API_KEY` environment variable to the key:
 ```bash
 export OPENAI_API_KEY=<YOUR-API-KEY>
 ```
 
-In general, a language model that is hosted with an Open AI API compatible endpoint can be used. You will need to pass in your API's URL (and API key, if applicable) when instantiating `openai.Client()` in the notebook.
+In general, a language model that is hosted with an Open AI API compatible endpoint can be used. You will need to pass in your API's endpoint URL (and API key, if applicable) when instantiating `openai.Client()` in the notebook.
 
 #### Run the notebook!
 After following these steps, please proceed with the notebook.
