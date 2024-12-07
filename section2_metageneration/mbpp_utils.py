@@ -1,4 +1,4 @@
-# This code is adapted from bigcode-evaluation-harness 
+# This code below is adapted from bigcode-evaluation-harness:
 # https://github.com/bigcode-project/bigcode-evaluation-harness/blob/main/bigcode_eval/tasks/custom_metrics/execute.py
 #
 # Copyright 2020 The HuggingFace Datasets Authors and the current dataset script contributor.
@@ -29,7 +29,42 @@ import tempfile
 import traceback
 import json
 import pickle
+import re
 
+
+def make_prompt(example: dict) -> str:
+    '''
+    Makes a zero-shot prompt for an MBPP example
+    '''
+    instruction = example['text']
+    tests = "\n".join(example['test_list'])
+    prompt = f'{instruction}\n\n```python\n{tests}\n```\n\nRespond with the function only wrapped in triple backticks.'
+    return prompt
+
+
+CODE_BLOCK_PATTERN = r"```(\w*)\n(.*?)\n```"
+
+def extract_code(completion: str) -> str:
+    match = re.findall(CODE_BLOCK_PATTERN, completion, flags=re.DOTALL)
+    if match:
+        # assume longest code block is desired code
+        return max((m[1] for m in match), key=lambda x: len(x))
+    else:
+        return completion
+
+
+FUNC_CALL_PATTERN = r"assert [A-z_]*\(.*?\) =="
+
+def extract_func_calls(test_list: list[str]) -> list[str]:
+    calls = []
+    n_front, n_back = len("assert "), len(" ==")
+    for test_str in test_list:
+        match = re.findall(FUNC_CALL_PATTERN, test_str, flags=re.DOTALL)
+        if match:
+            call_str = match[0][n_front:-n_back]
+            calls.append(call_str)
+    return calls
+            
 
 def execute_tests(codes: list[str], tests: list[str]) -> list[dict]:
     """
@@ -46,8 +81,11 @@ def execute_tests(codes: list[str], tests: list[str]) -> list[dict]:
     return results
 
 
-def execute_codes(codes: list[str], calls: list[str], timeout=1) -> list[dict]:
-    # TODO
+def execute_codes(codes: list[str], calls: list[str], timeout=0.1) -> list[dict]:
+    """
+    For each code in codes (where code implements some function f), executes each
+    function call to f in calls and returns result of each call.
+    """
     results = []
     for code in codes:
         program_lines = []

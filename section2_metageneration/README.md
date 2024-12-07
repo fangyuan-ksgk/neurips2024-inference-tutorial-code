@@ -26,3 +26,9 @@ In general, a language model that is hosted with an Open AI API compatible endpo
 
 #### Run the notebook!
 After following these steps, please proceed with the notebook.
+
+## MBPP Case Study
+
+[mbpp_demo.ipynb](./mbpp_demo.ipynb) contains example implementations of three primitve meta-generation algorithms: best-of-$n$, minimum Bayes risk, and refinement. The algorithms (and variants thereof) are then compared on a Python code generation task.
+
+As with the `treefinement.ipynb` notebook, this notebook requires an Open AI API key or an Open AI compatible endpoint. However, the code uses the `litellm` library for model inference, which supports a variety of inference providers and model backends; see [here](https://arxiv.org/abs/2304.05128) for a full list. As such, the code in the notebook should be compatible with other backends beside Open AI, modulo some [differences in parameter names](https://docs.litellm.ai/docs/completion/input).
