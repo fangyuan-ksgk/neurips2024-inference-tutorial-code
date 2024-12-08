@@ -1,8 +1,26 @@
+# Section 2: Meta-generation
+
+## MBPP Case Study
+
+### Files
+- [mbpp_demo.ipynb](./mbpp/mbpp_demo.ipynb) contains example implementations of three primitve meta-generation algorithms: best-of-$n$, minimum Bayes risk, and refinement. The algorithms (and variants thereof) are then compared on a Python code generation task with the Mostly Basic Python Problems (MBPP) dataset.
+- [mbpp_utils.py](./mbpp/mbpp_utils.py) contains helpers for executing and processing Python programs.
+
+### Setup
+
+While the code is set up to use an Open AI API key or an Open AI compatible endpoint, it uses the `litellm` library for model inference, which supports a variety of inference providers and model backends; see [here](https://arxiv.org/abs/2304.05128) for a full list. As such, the code in the notebook should be compatible with other backends beside Open AI, modulo some [differences in parameter names](https://docs.litellm.ai/docs/completion/input). 
+
+To use the code with OpenAI, just set `OPENAI_API_KEY` in your environment.
+```bash
+export OPENAI_API_KEY=<YOUR-API-KEY>
+```
+
+
 ## Treefinement
 
-The [treefinement.ipynb notebook](./treefinement.ipynb) shows a more complex meta-generation algorithm called **Treefinement** [[Aggarwal et al 2024]()] that combines parallel sampling, refinement, and tree search.
-
-The task is formally verified code generation: generating Rust code that passes a formal verifier called Verus. 
+### Files
+- [treefinement.ipynb notebook](./treefinement/treefinement.ipynb) shows a more complex meta-generation algorithm called **Treefinement** [[Aggarwal et al 2024]()] that combines parallel sampling, refinement, and tree search. The task is formally verified code generation: generating Rust code that passes a formal verifier called Verus. 
+- [utils.py](./treefinement/utils.py) contains utilities for executing and processing Rust code and helpers for tree search.
 
 ### Setup (Verus)
 
@@ -26,9 +44,3 @@ In general, a language model that is hosted with an Open AI API compatible endpo
 
 #### Run the notebook!
 After following these steps, please proceed with the notebook.
-
-## MBPP Case Study
-
-[mbpp_demo.ipynb](./mbpp_demo.ipynb) contains example implementations of three primitve meta-generation algorithms: best-of-$n$, minimum Bayes risk, and refinement. The algorithms (and variants thereof) are then compared on a Python code generation task.
-
-As with the `treefinement.ipynb` notebook, this notebook requires an Open AI API key or an Open AI compatible endpoint. However, the code uses the `litellm` library for model inference, which supports a variety of inference providers and model backends; see [here](https://arxiv.org/abs/2304.05128) for a full list. As such, the code in the notebook should be compatible with other backends beside Open AI, modulo some [differences in parameter names](https://docs.litellm.ai/docs/completion/input).
