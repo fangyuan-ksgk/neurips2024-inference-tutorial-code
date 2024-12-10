@@ -6,7 +6,7 @@ We provide code for each part of the tutorial:
 
 - [Part I: Generation Algorithms](https://github.com/cmu-l3/neurips2024-inference-tutorial-code/tree/main/section1_token_level_generation)
 - [Part II: Meta-Generation Algorithms](https://github.com/cmu-l3/neurips2024-inference-tutorial-code/tree/main/section2_metageneration)
-- [Part III: Meta-Generation Algorithms](https://github.com/cmu-l3/neurips2024-inference-tutorial-code/tree/main/section2_metageneration)
+- [Part III: Efficient Meta-Generation](https://github.com/cmu-l3/neurips2024-inference-tutorial-code/tree/main/section3)
 
 
 For each section, please go into the corresponding directory, check the README describing the code located there.
