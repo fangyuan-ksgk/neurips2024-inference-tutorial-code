@@ -1,4 +1,4 @@
-# Code Examples: *"Beyond Decoding: Meta-Generation Algorithms for Large Language Models"* (Neurips 2024 Tutorial)
+# Code Examples: *Beyond Decoding: Meta-Generation Algorithms for Large Language Models* (Neurips 2024 Tutorial)
 
 Code examples for the NeurIPS 2024 tutorial [*Beyond Decoding: Meta-Generation Algorithms for Large Language Models*](https://cmu-l3.github.io/neurips2024-inference-tutorial). 
 
