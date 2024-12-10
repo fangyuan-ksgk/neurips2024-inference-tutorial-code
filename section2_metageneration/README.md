@@ -1,4 +1,4 @@
-# Section 2: Meta-generation
+# Section 2: Meta-Generation
 
 ## MBPP Case Study
 
