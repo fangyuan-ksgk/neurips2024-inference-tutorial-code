@@ -36,7 +36,7 @@ def make_prompt(example: dict, n_tests=1) -> str:
     '''
     Makes a zero-shot prompt for an MBPP example
     '''
-    instruction = example['prompt']
+    instruction = example['text']
     tests = "\n".join(example['test_list'][:n_tests])
     prompt = f'{instruction}\n\n```python\n{tests}\n```\n\nRespond with the function only wrapped in triple backticks.'
     return prompt
